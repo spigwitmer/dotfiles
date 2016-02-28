@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # Populates dot-config and vim files
 # run it with `-full` to overwrite all files
 
@@ -22,6 +20,9 @@ PACMAN="$(which pacman 2>/dev/null)"
 GIT="$(which git 2>/dev/null)"
 SCREEN="$(which screen 2>/dev/null)"
 CTAGS="$(which ctags 2>/dev/null)"
+VIM="$(which vim 2>/dev/null)"
+
+ZSH="$(which zsh 2>/dev/null)"
 
 if [ "x$1" = "x-full" ]; then
     FULL=1 # scorched earth policy (replace all config files/dirs)
@@ -53,7 +54,7 @@ function install_os_package() {
 function populate_rc() {
     local src_rc=$1
     local dest_rc=$2
-
+    echo "Populating $dest_rc..."
     if [ -f ${dest_rc} -a $FULL -eq 1 ]; then
         echo "" >>${dest_rc}
         cat ${src_rc} >>${dest_rc}
@@ -81,12 +82,7 @@ function prompt_install_pkg() {
     fi
 }
 
-# Linux rc files
 populate_rc ${SRC_ROOT}/.bashrc ${BASH_RC}
-populate_rc ${SRC_ROOT}/.screenrc ${SCREEN_RC}
-populate_rc ${SRC_ROOT}/.vimrc ${VIM_RC}
-populate_rc ${SRC_ROOT}/.zshrc ${ZSH_RC}
-populate_rc ${SRC_ROOT}/.gitconfig ${GITCONFIG}
 
 # tools
 if [ ! -x $GIT ]; then
@@ -98,30 +94,24 @@ if [ ! -x $GIT ]; then
         exit 1
     fi
 fi
+populate_rc ${SRC_ROOT}/.gitconfig ${GITCONFIG}
 if [ ! -x $SCREEN ]; then
     prompt_install_pkg screen
 fi
+populate_rc ${SRC_ROOT}/.screenrc ${SCREEN_RC}
 if [ ! -x $CTAGS ]; then
     prompt_install_pkg ctags
 fi
 
-# tpope is love tpope is life
-# http://tbaggery.com/2011/08/08/effortless-ctags-with-git.html
-if [ ! -d ${GIT_TEMPLATE_DIR} ]; then
-    git config --global init.templatedir '~/.git_template'
-    mkdir -p ${GIT_TEMPLATE_DIR}/hooks
-    cp ${SRC_ROOT}/.git_template/hooks/ctags ${GIT_TEMPLATE_DIR}/hooks
-    pushd ${GIT_TEMPLATE_DIR}/hooks
-    ln -s ctags post-checkout
-    ln -s ctags post-commit
-    ln -s ctags post-merge
-    cp ${SRC_ROOT}/.git_template/hooks/post-rewrite \
-                ${GIT_TEMPLATE_DIR}/hooks
-    popd
+# zsh
+if [ ! -x $ZSH ]; then
+    prompt_install_pkg zsh
 fi
+git clone https://github.com/zsh-users/antigen.git ~/antigen
+populate_rc ${SRC_ROOT}/.zshrc ${ZSH_RC}
 
 # vim + pathogen
-if ! which vim; then
+if [ ! -x $VIM ]; then
     prompt_install_pkg vim
 fi
 if [ $FULL -eq 1 ]; then
@@ -135,5 +125,24 @@ ln -s ${VIM_DIR}/.pathogen/autoload/pathogen.vim ${VIM_DIR}/autoload/
 clone_vim_bundle https://github.com/tpope/vim-fugitive.git
 clone_vim_bundle https://github.com/vim-airline/vim-airline.git
 clone_vim_bundle https://github.com/davidhalter/jedi-vim.git
+
+populate_rc ${SRC_ROOT}/.vimrc ${VIM_RC}
+
+
+# tpope is love tpope is life
+# http://tbaggery.com/2011/08/08/effortless-ctags-with-git.html
+if [ ! -d ${GIT_TEMPLATE_DIR} ]; then
+    git config --global init.templatedir '~/.git_template'
+    mkdir -p ${GIT_TEMPLATE_DIR}/hooks
+    cp ${SRC_ROOT}/.git_template/hooks/ctags ${GIT_TEMPLATE_DIR}/hooks/
+    pushd ${GIT_TEMPLATE_DIR}/hooks
+    ln -s ./ctags post-checkout
+    ln -s ./ctags post-commit
+    ln -s ./ctags post-merge
+    cp ${SRC_ROOT}/.git_template/hooks/post-rewrite \
+                ${GIT_TEMPLATE_DIR}/hooks
+    popd
+fi
+
 
 echo "Home dir configured. Happy hacking."
