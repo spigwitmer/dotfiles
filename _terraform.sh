@@ -29,7 +29,7 @@ if [ ! -x $GIT ]; then
             " without git, but I can't find it, not continuing"
     exit 1
 fi
-if [ "x$2" = "x-full" ]; then
+if [ "$1" = "-full" ]; then
     FULL=1 # scorched earth policy (replace all config files/dirs)
 fi
 
@@ -38,14 +38,14 @@ YUM_OVERRIDES["vim"]="vim-enhanced"
 
 function install_os_package() {
     local pkg=$1
-    if [ -x $YUM ]; then
+    if [ -x "$YUM" ]; then
         # CentOS/RHEL/SL
         sudo $YUM install ${YUM_OVERRIDES[$pkg]:-$pkg}
-    elif [ -x $APTGET ]; then
+    elif [ -x "$APTGET" ]; then
         # Ubuntu/Debian
         # TODO: do Ubuntu and Debian have different package names?
         sudo $APTGET install ${APT_OVERRIDES[$pkg]:-$pkg}
-    elif [ -x $PACMAN ]; then
+    elif [ -x "$PACMAN" ]; then
         # Archlinux
         sudo $PACMAN -S ${PACMAN_OVERRIDES[$pkg]:-$pkg}
     else
@@ -60,7 +60,7 @@ function populate_rc() {
     local src_rc=$1
     local dest_rc=$2
     echo "Populating $dest_rc..."
-    if [ -f ${dest_rc} -a $FULL -eq 1 ]; then
+    if [ -f ${dest_rc} -a "x$FULL"="x1" ]; then
         echo "" >>${dest_rc}
         cat ${src_rc} >>${dest_rc}
     else
@@ -91,25 +91,24 @@ populate_rc ${SRC_ROOT}/.bashrc ${BASH_RC}
 
 # tools
 if [ ! -x "$SCREEN" ]; then
-    prompt_install_pkg screen
+    prompt_install_pkg screen && populate_rc ${SRC_ROOT}/.screenrc ${SCREEN_RC}
 fi
-populate_rc ${SRC_ROOT}/.screenrc ${SCREEN_RC}
 if [ ! -x "$CTAGS" ]; then
     prompt_install_pkg ctags
+    CTAGS="$(which ctags 2>/dev/null)"
 fi
 
 # zsh
 if [ ! -x "$ZSH" ]; then
-    prompt_install_pkg zsh
+    prompt_install_pkg zsh && populate_rc ${SRC_ROOT}/.zshrc ${ZSH_RC}
 fi
-git clone https://github.com/zsh-users/antigen.git ~/antigen
-populate_rc ${SRC_ROOT}/.zshrc ${ZSH_RC}
+[ ! -d ~/antigen ] && git clone https://github.com/zsh-users/antigen.git ~/antigen
 
 # vim + pathogen
 if [ ! -x "$VIM" ]; then
     prompt_install_pkg vim
 fi
-if [ $FULL -eq 1 ]; then
+if [ "x$FULL" = "x1" ]; then
     mv ${VIM_DIR} ${VIM_DIR}.old
 fi
 mkdir -p ${VIM_DIR}/autoload ${VIM_DIR}/.pathogen ${VIM_DIR}/bundle
@@ -140,5 +139,5 @@ if [ ! -d ${GIT_TEMPLATE_DIR} ]; then
 fi
 populate_rc ${SRC_ROOT}/.gitconfig ${GITCONFIG}
 echo "Setting shell to zsh..."
-chsh -s $(chsh -l | grep zsh | head -n 1)
+chsh -s $(chsh -l | grep zsh | tail -n 1)
 echo "Home dir configured. Happy hacking."
