@@ -83,7 +83,7 @@ function prompt_install_pkg() {
     echo -n "$pkg not found, install $pkg (Y/n)? "
     read install
     if [ "x${install}" != "xn" ]; then
-        install_os_package screen
+        install_os_package $pkg
     fi
 }
 
@@ -139,5 +139,6 @@ if [ ! -d ${GIT_TEMPLATE_DIR} ]; then
     popd
 fi
 populate_rc ${SRC_ROOT}/.gitconfig ${GITCONFIG}
-
+echo "Setting shell to zsh..."
+chsh -s $(chsh -l | grep zsh | head -n 1)
 echo "Home dir configured. Happy hacking."
