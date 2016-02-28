@@ -29,7 +29,7 @@ if [ ! -x $GIT ]; then
             " without git, but I can't find it, not continuing"
     exit 1
 fi
-if [ "x$1" = "x-full" ]; then
+if [ "x$2" = "x-full" ]; then
     FULL=1 # scorched earth policy (replace all config files/dirs)
 fi
 
