@@ -21,9 +21,14 @@ GIT="$(which git 2>/dev/null)"
 SCREEN="$(which screen 2>/dev/null)"
 CTAGS="$(which ctags 2>/dev/null)"
 VIM="$(which vim 2>/dev/null)"
-
 ZSH="$(which zsh 2>/dev/null)"
 
+if [ ! -x $GIT ]; then
+    # you manually downloaded _terraform.sh ...
+    echo >&2 "I don't know how you managed to get here" \
+            " without git, but I can't find it, not continuing"
+    exit 1
+fi
 if [ "x$1" = "x-full" ]; then
     FULL=1 # scorched earth policy (replace all config files/dirs)
 fi
@@ -85,33 +90,23 @@ function prompt_install_pkg() {
 populate_rc ${SRC_ROOT}/.bashrc ${BASH_RC}
 
 # tools
-if [ ! -x $GIT ]; then
-    install_os_package git
-    if ! which git; then
-        # you manually downloaded _terraform.sh ...
-        echo >&2 "I don't know how you managed to get here" \
-                " without git, but I can't find it, not continuing"
-        exit 1
-    fi
-fi
-populate_rc ${SRC_ROOT}/.gitconfig ${GITCONFIG}
-if [ ! -x $SCREEN ]; then
+if [ ! -x "$SCREEN" ]; then
     prompt_install_pkg screen
 fi
 populate_rc ${SRC_ROOT}/.screenrc ${SCREEN_RC}
-if [ ! -x $CTAGS ]; then
+if [ ! -x "$CTAGS" ]; then
     prompt_install_pkg ctags
 fi
 
 # zsh
-if [ ! -x $ZSH ]; then
+if [ ! -x "$ZSH" ]; then
     prompt_install_pkg zsh
 fi
 git clone https://github.com/zsh-users/antigen.git ~/antigen
 populate_rc ${SRC_ROOT}/.zshrc ${ZSH_RC}
 
 # vim + pathogen
-if [ ! -x $VIM ]; then
+if [ ! -x "$VIM" ]; then
     prompt_install_pkg vim
 fi
 if [ $FULL -eq 1 ]; then
@@ -143,6 +138,6 @@ if [ ! -d ${GIT_TEMPLATE_DIR} ]; then
                 ${GIT_TEMPLATE_DIR}/hooks
     popd
 fi
-
+populate_rc ${SRC_ROOT}/.gitconfig ${GITCONFIG}
 
 echo "Home dir configured. Happy hacking."
