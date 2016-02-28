@@ -8,5 +8,5 @@ fi
 # User specific aliases and functions
 source ~/.git-completion.bash
 
-export PATH="/home/pat/blackbox/bin:/home/pat/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 . ~/.private.bash
