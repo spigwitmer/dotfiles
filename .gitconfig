@@ -4,7 +4,7 @@
 	st = status
 	co = checkout
 	ds = diff --staged
-    hlog = log --graph --all --format='%h %Cred%d%Creset %Cgreen%an%Creset %Cblue%s%Creset'
+	hlog = log --graph --all --format='%h %Cred%d%Creset %Cgreen%an%Creset %Cblue%s%Creset'
 	cp = cherry-pick
 	ctags = !.git/hooks/ctags
 [init]
